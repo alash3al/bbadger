@@ -2,7 +2,7 @@ package bbadger
 
 import (
 	"github.com/blevesearch/bleve/index/store"
-	"github.com/dgraph-io/badger"
+	"gopkg.in/dgraph-io/badger.v1"
 )
 
 type Reader struct {

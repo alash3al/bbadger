@@ -3,7 +3,7 @@ package bbadger
 import (
 	"bytes"
 
-	"github.com/dgraph-io/badger"
+	"gopkg.in/dgraph-io/badger.v1"
 )
 
 type PrefixIterator struct {
