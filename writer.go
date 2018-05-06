@@ -48,7 +48,7 @@ func (w *Writer) ExecuteBatch(b store.KVBatch) error {
 		if !fullMergeOk {
 			return fmt.Errorf("merge operator returned failure")
 		}
-		batch.Txn.Set(kb, mergedVal, 0)
+		batch.Txn.Set(kb, mergedVal)
 	}
 
 	return batch.Txn.Commit(nil)

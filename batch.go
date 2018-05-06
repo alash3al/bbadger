@@ -18,7 +18,7 @@ func (b *Batch) Set(key, val []byte) {
 	valc := make([]byte, len(val))
 	copy(valc, val)
 
-	b.Txn.Set(keyc, valc, 0)
+	b.Txn.Set(keyc, valc)
 }
 
 func (b *Batch) Delete(key []byte) {
