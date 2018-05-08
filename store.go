@@ -28,6 +28,7 @@ import (
 
 	"github.com/blevesearch/bleve/index/store"
 	"github.com/blevesearch/bleve/registry"
+	"github.com/dgraph-io/badger/options"
 	"gopkg.in/dgraph-io/badger.v1"
 )
 
@@ -53,6 +54,10 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 	opt := badger.DefaultOptions
 	opt.Dir = path
 	opt.ValueDir = path
+	opt.ReadOnly = false
+	opt.Truncate = true
+	opt.TableLoadingMode = options.MemoryMap
+	opt.ValueLogLoadingMode = options.MemoryMap
 
 	if cdir, ok := config["create_if_missing"].(bool); ok && cdir {
 		if _, err := os.Stat(path); os.IsNotExist(err) {
