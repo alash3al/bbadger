@@ -56,7 +56,7 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 	opt.ValueDir = path
 	opt.ReadOnly = false
 	opt.Truncate = true
-	opt.TableLoadingMode = options.LoadToRAM
+	opt.TableLoadingMode = options.MemoryMap
 	opt.ValueLogLoadingMode = options.MemoryMap
 
 	if cdir, ok := config["create_if_missing"].(bool); ok && cdir {
