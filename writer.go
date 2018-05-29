@@ -38,7 +38,7 @@ func (w *Writer) ExecuteBatch(b store.KVBatch) error {
 		}
 		var v []byte
 		if err != badger.ErrKeyNotFound {
-			vt, err := item.Value()
+			vt, err := item.ValueCopy(nil)
 			if err != nil {
 				return err
 			}

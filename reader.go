@@ -21,11 +21,9 @@ func (r *Reader) Get(k []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	vs, err := item.Value()
-	v := make([]byte, len(vs))
-	copy(v, vs)
+	vs, err := item.ValueCopy(nil)
 
-	return v, err
+	return vs, err
 }
 
 func (r *Reader) MultiGet(keys [][]byte) ([][]byte, error) {
@@ -35,7 +33,7 @@ func (r *Reader) MultiGet(keys [][]byte) ([][]byte, error) {
 func (r *Reader) PrefixIterator(k []byte) store.KVIterator {
 	rv := PrefixIterator{
 		iterator: r.Txn.NewIterator(r.ItrOpts),
-		prefix:   k[:],
+		prefix:   k,
 	}
 	rv.iterator.Seek(k)
 	return &rv
@@ -44,8 +42,8 @@ func (r *Reader) PrefixIterator(k []byte) store.KVIterator {
 func (r *Reader) RangeIterator(start, end []byte) store.KVIterator {
 	rv := RangeIterator{
 		iterator: r.Txn.NewIterator(r.ItrOpts),
-		start:    start[:],
-		stop:     end[:],
+		start:    start,
+		stop:     end,
 	}
 	rv.iterator.Seek(start)
 	return &rv

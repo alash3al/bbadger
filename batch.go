@@ -12,20 +12,15 @@ type Batch struct {
 }
 
 func (b *Batch) Set(key, val []byte) {
-	keyc := make([]byte, len(key))
-	copy(keyc, key)
-
-	valc := make([]byte, len(val))
-	copy(valc, val)
-
-	b.Txn.Set(keyc, valc)
+	if err := b.Txn.Set(key, val); err == badger.ErrTxnTooBig {
+		b.Txn.Commit(nil)
+		b.Txn = b.store.db.NewTransaction(true)
+		b.Txn.Set(key, val)
+	}
 }
 
 func (b *Batch) Delete(key []byte) {
-	keyc := make([]byte, len(key))
-	copy(keyc, key)
-
-	b.Txn.Delete(keyc)
+	b.Txn.Delete(key)
 }
 
 func (b *Batch) Merge(key, val []byte) {
@@ -33,12 +28,13 @@ func (b *Batch) Merge(key, val []byte) {
 }
 
 func (b *Batch) Reset() {
-	b.merge = store.NewEmulatedMerge(b.store.mo)
+	b.Txn.Commit(nil)
 	b.Txn = b.store.db.NewTransaction(true)
+	b.merge = store.NewEmulatedMerge(b.store.mo)
 }
 
 func (b *Batch) Close() error {
 	b.merge = nil
-	b.Txn.Discard()
+	b.Txn.Commit(nil)
 	return nil
 }
