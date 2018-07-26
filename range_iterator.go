@@ -32,17 +32,11 @@ func (i *RangeIterator) Current() ([]byte, []byte, bool) {
 }
 
 func (i *RangeIterator) Key() []byte {
-	ks := i.iterator.Item().Key()
-	k := make([]byte, len(ks))
-	copy(k, ks)
-
-	return k
+	return i.iterator.Item().KeyCopy(nil)
 }
 
 func (i *RangeIterator) Value() []byte {
-	vs, _ := i.iterator.Item().Value()
-	v := make([]byte, len(vs))
-	copy(v, vs)
+	v, _ := i.iterator.Item().ValueCopy(nil)
 
 	return v
 }
