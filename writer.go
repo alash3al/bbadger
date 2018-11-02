@@ -4,61 +4,72 @@ import (
 	"fmt"
 
 	"github.com/blevesearch/bleve/index/store"
-	"github.com/dgraph-io/badger"
 )
 
 // Writer bleve.search/store/Writer implementation
+// I (alash3al) adopted it from bleve/store/boltdb
 type Writer struct {
 	s *Store
 }
 
-// NewBatch creates a new batch
+// NewBatch implements NewBatch
 func (w *Writer) NewBatch() store.KVBatch {
-	txn := w.s.db.NewTransaction(true)
-	return &Batch{
-		store: w.s,
-		merge: store.NewEmulatedMerge(w.s.mo),
-		txn:   txn,
-	}
+	return store.NewEmulatedBatch(w.s.mo)
 }
 
-// NewBatchEx implements blevesearch.Writer.NewBatchEx
+// NewBatchEx implements bleve NewBatchEx
 func (w *Writer) NewBatchEx(options store.KVBatchOptions) ([]byte, store.KVBatch, error) {
 	return make([]byte, options.TotalBytes), w.NewBatch(), nil
 }
 
-// ExecuteBatch implements blevesearch.Writer.ExecuteBatch
-func (w *Writer) ExecuteBatch(b store.KVBatch) error {
-	batch, ok := b.(*Batch)
+// ExecuteBatch implements bleve ExecuteBatch
+func (w *Writer) ExecuteBatch(batch store.KVBatch) (err error) {
+	emulatedBatch, ok := batch.(*store.EmulatedBatch)
 	if !ok {
 		return fmt.Errorf("wrong type of batch")
 	}
 
-	for k, mergeOps := range batch.merge.Merges {
+	txn := w.s.db.NewTransaction(true)
+
+	defer (func() {
+		txn.Commit()
+	})()
+
+	for k, mergeOps := range emulatedBatch.Merger.Merges {
 		kb := []byte(k)
-		item, err := batch.txn.Get(kb)
-		if err != nil && err != badger.ErrKeyNotFound {
-			return err
+		item, err := txn.Get(kb)
+		existingVal := []byte{}
+		if err == nil {
+			existingVal, _ = item.ValueCopy(nil)
 		}
-		var v []byte
-		if err != badger.ErrKeyNotFound {
-			vt, err := item.ValueCopy(nil)
-			if err != nil {
-				return err
-			}
-			v = vt
-		}
-		mergedVal, fullMergeOk := w.s.mo.FullMerge(kb, v, mergeOps)
+		mergedVal, fullMergeOk := w.s.mo.FullMerge(kb, existingVal, mergeOps)
 		if !fullMergeOk {
 			return fmt.Errorf("merge operator returned failure")
 		}
-		batch.txn.Set(kb, mergedVal)
+		err = txn.Set(kb, mergedVal)
+		if err != nil {
+			return err
+		}
 	}
 
-	return batch.txn.Commit()
+	for _, op := range emulatedBatch.Ops {
+		if op.V != nil {
+			err = txn.Set(op.K, op.V)
+			if err != nil {
+				return err
+			}
+		} else {
+			err = txn.Delete(op.K)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
-// Close perform some cleanup operations
+// Close closes the current writer
 func (w *Writer) Close() error {
 	return nil
 }
