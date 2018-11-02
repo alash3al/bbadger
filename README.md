@@ -1,6 +1,6 @@
 Bleve Badger Backend
 =====================
-> [Blevesearch](https://github.com/blevesearch/bleve) kvstore implementation based on [Badger](https://gopkg.in/dgraph-io/badger.v1) forked from [https://github.com/akhenakh/bleve/tree/badger](https://github.com/akhenakh/bleve/tree/badger) with some fixed issues.
+> [Blevesearch](https://github.com/blevesearch/bleve) kvstore implementation based on [Badger](https://github.com/dgraph-io/badger) forked from [https://github.com/akhenakh/bleve/tree/badger](https://github.com/akhenakh/bleve/tree/badger) with alot of improvements and fixes.
 
 Usage
 ==========
@@ -17,9 +17,10 @@ import (
 )
 
 func main() {
-	index, err := bleve.NewUsing("indexName", bleve.NewIndexMapping(), bleve.Config.DefaultIndexType, bbadger.Name, map[string]interface{}{
-		"path": "/tmp/badger",
-	})
+	// create bleveIndex
+	index, err := bbadger.NewBleveIndex("/tmp/badger/indexName", bleve.NewIndexMapping())
+
+	// or open existing one
 
 	// go on here
 	// index.Index(.....)

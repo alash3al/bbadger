@@ -23,29 +23,31 @@
 package bbadger
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/blevesearch/bleve/index/store"
 	"github.com/blevesearch/bleve/registry"
+	"github.com/dgraph-io/badger"
 	"github.com/dgraph-io/badger/options"
-	"gopkg.in/dgraph-io/badger.v1"
 )
 
 const (
+	// Name is the name of this engine in blevesearch
 	Name = "badger"
 )
 
+// Store implements blevesearch store
 type Store struct {
 	path string
 	db   *badger.DB
 	mo   store.MergeOperator
 }
 
+// New creates a new store instance
 func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, error) {
 	path, ok := config["path"].(string)
 	if !ok {
-		return nil, fmt.Errorf("must specify path")
+		return nil, os.ErrInvalid
 	}
 	if path == "" {
 		return nil, os.ErrInvalid
@@ -59,12 +61,10 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 	opt.TableLoadingMode = options.MemoryMap
 	opt.ValueLogLoadingMode = options.MemoryMap
 
-	if cdir, ok := config["create_if_missing"].(bool); ok && cdir {
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			err := os.Mkdir(path, os.FileMode(0700))
-			if err != nil {
-				return nil, err
-			}
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		err := os.MkdirAll(path, os.FileMode(0700))
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -81,23 +81,27 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 	return &rv, nil
 }
 
+// Close cleanup and close the current store
 func (s *Store) Close() error {
 	return s.db.Close()
 }
 
+// Reader initialize a new store.Reader
 func (s *Store) Reader() (store.KVReader, error) {
 	return &Reader{
-		ItrOpts: badger.DefaultIteratorOptions,
-		Txn:     s.db.NewTransaction(false),
+		itrOpts: badger.DefaultIteratorOptions,
+		s:       s,
 	}, nil
 }
 
+// Writer initialize a new store.Writer
 func (s *Store) Writer() (store.KVWriter, error) {
 	return &Writer{
 		s: s,
 	}, nil
 }
 
+// init add the engine name to blevesearch
 func init() {
 	registry.RegisterKVStore(Name, New)
 }

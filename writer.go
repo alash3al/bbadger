@@ -4,35 +4,39 @@ import (
 	"fmt"
 
 	"github.com/blevesearch/bleve/index/store"
-	"gopkg.in/dgraph-io/badger.v1"
+	"github.com/dgraph-io/badger"
 )
 
+// Writer bleve.search/store/Writer implementation
 type Writer struct {
 	s *Store
 }
 
+// NewBatch creates a new batch
 func (w *Writer) NewBatch() store.KVBatch {
+	txn := w.s.db.NewTransaction(true)
 	return &Batch{
 		store: w.s,
 		merge: store.NewEmulatedMerge(w.s.mo),
-		Txn:   w.s.db.NewTransaction(true),
+		txn:   txn,
 	}
 }
 
+// NewBatchEx implements blevesearch.Writer.NewBatchEx
 func (w *Writer) NewBatchEx(options store.KVBatchOptions) ([]byte, store.KVBatch, error) {
 	return make([]byte, options.TotalBytes), w.NewBatch(), nil
 }
 
+// ExecuteBatch implements blevesearch.Writer.ExecuteBatch
 func (w *Writer) ExecuteBatch(b store.KVBatch) error {
 	batch, ok := b.(*Batch)
 	if !ok {
 		return fmt.Errorf("wrong type of batch")
 	}
 
-	// first process merges
 	for k, mergeOps := range batch.merge.Merges {
 		kb := []byte(k)
-		item, err := batch.Txn.Get(kb)
+		item, err := batch.txn.Get(kb)
 		if err != nil && err != badger.ErrKeyNotFound {
 			return err
 		}
@@ -48,13 +52,13 @@ func (w *Writer) ExecuteBatch(b store.KVBatch) error {
 		if !fullMergeOk {
 			return fmt.Errorf("merge operator returned failure")
 		}
-		batch.Txn.Set(kb, mergedVal)
+		batch.txn.Set(kb, mergedVal)
 	}
 
-	return batch.Txn.Commit(nil)
+	return batch.txn.Commit()
 }
 
+// Close perform some cleanup operations
 func (w *Writer) Close() error {
-	w.s = nil
 	return nil
 }

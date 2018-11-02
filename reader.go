@@ -2,18 +2,26 @@ package bbadger
 
 import (
 	"github.com/blevesearch/bleve/index/store"
-	"gopkg.in/dgraph-io/badger.v1"
+	"github.com/dgraph-io/badger"
 )
 
+// Reader implements bleve/Store/Reader interface
 type Reader struct {
-	// you can modify ItrOpts before calling PrefixIterator or PrefixIterator
-	// defaulted to badger.DefaultIteratorOptions by store.Reader()
-	ItrOpts badger.IteratorOptions
-	*badger.Txn
+	itrOpts badger.IteratorOptions
+	s       *Store
 }
 
+// Get fetch the value of the specified key from the store
 func (r *Reader) Get(k []byte) ([]byte, error) {
-	item, err := r.Txn.Get(k)
+	var data []byte
+	err := r.s.db.View(func(txn *badger.Txn) error {
+		item, err := txn.Get(k)
+		if err != nil {
+			return err
+		}
+		data, err = item.ValueCopy(nil)
+		return err
+	})
 	if err == badger.ErrKeyNotFound {
 		return nil, nil
 	}
@@ -21,27 +29,34 @@ func (r *Reader) Get(k []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	vs, err := item.ValueCopy(nil)
-
-	return vs, err
+	return data, nil
 }
 
+// MultiGet returns multiple values for the specified keys
 func (r *Reader) MultiGet(keys [][]byte) ([][]byte, error) {
 	return store.MultiGet(r, keys)
 }
 
+// PrefixIterator initialize a new prefix iterator
 func (r *Reader) PrefixIterator(k []byte) store.KVIterator {
+	txn := r.s.db.NewTransaction(false)
+	itr := txn.NewIterator(r.itrOpts)
 	rv := PrefixIterator{
-		iterator: r.Txn.NewIterator(r.ItrOpts),
+		txn:      txn,
+		iterator: itr,
 		prefix:   k,
 	}
 	rv.iterator.Seek(k)
 	return &rv
 }
 
+// RangeIterator initialize a new range iterator
 func (r *Reader) RangeIterator(start, end []byte) store.KVIterator {
+	txn := r.s.db.NewTransaction(false)
+	itr := txn.NewIterator(r.itrOpts)
 	rv := RangeIterator{
-		iterator: r.Txn.NewIterator(r.ItrOpts),
+		txn:      txn,
+		iterator: itr,
 		start:    start,
 		stop:     end,
 	}
@@ -49,6 +64,7 @@ func (r *Reader) RangeIterator(start, end []byte) store.KVIterator {
 	return &rv
 }
 
+// Close closes the current reader and do some cleanup
 func (r *Reader) Close() error {
 	return nil
 }
