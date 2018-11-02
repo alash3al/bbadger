@@ -20,8 +20,6 @@ func main() {
 	// create/open bleveIndex
 	index, err := bbadger.BleveIndex("/tmp/badger/indexName", bleve.NewIndexMapping())
 
-	// or open existing one
-
 	// go on here
 	// index.Index(.....)
 }
