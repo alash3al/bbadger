@@ -58,7 +58,7 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 	opt.ValueDir = path
 	opt.ReadOnly = false
 	opt.Truncate = true
-	opt.TableLoadingMode = options.MemoryMap
+	opt.TableLoadingMode = options.LoadToRAM
 	opt.ValueLogLoadingMode = options.MemoryMap
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
