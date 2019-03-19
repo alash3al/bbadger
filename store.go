@@ -89,7 +89,6 @@ func (s *Store) Close() error {
 // Reader initialize a new store.Reader
 func (s *Store) Reader() (store.KVReader, error) {
 	return &Reader{
-		//itrOpts: badger.DefaultIteratorOptions,
 		s:   s,
 		txn: s.db.NewTransaction(false),
 	}, nil
