@@ -32,7 +32,7 @@ func (w *Writer) ExecuteBatch(batch store.KVBatch) (err error) {
 	txn := w.s.db.NewTransaction(true)
 
 	defer (func() {
-		txn.Commit(nil)
+		txn.Commit()
 	})()
 
 	for k, mergeOps := range emulatedBatch.Merger.Merges {

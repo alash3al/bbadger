@@ -68,7 +68,7 @@ func (i *RangeIterator) Valid() bool {
 // Close closes the current iterator and commit its transaction
 func (i *RangeIterator) Close() error {
 	i.iterator.Close()
-	err := i.txn.Commit(nil)
+	err := i.txn.Commit()
 	if err != nil {
 		return err
 	}

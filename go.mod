@@ -11,8 +11,10 @@ require (
 	github.com/blevesearch/segment v0.0.0-20160915185041-762005e7a34f // indirect
 	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/couchbase/vellum v0.0.0-20190111184608-e91b68ff3efe // indirect
-	github.com/dgraph-io/badger v1.5.4
+	//github.com/dgraph-io/badger v1.5.4
+	github.com/dgraph-io/badger v2.0.0-rc.2.0.20190626232749-b116882676f2+incompatible
 	github.com/dgryski/go-farm v0.0.0-20190104051053-3adb47b1fb0f // indirect
+	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/golang/protobuf v1.3.1 // indirect
 	github.com/pkg/errors v0.8.1 // indirect

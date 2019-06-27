@@ -53,7 +53,7 @@ func New(mo store.MergeOperator, config map[string]interface{}) (store.KVStore, 
 		return nil, os.ErrInvalid
 	}
 
-	opt := badger.DefaultOptions
+	opt := badger.DefaultOptions(path)
 	opt.Dir = path
 	opt.ValueDir = path
 	opt.ReadOnly = false

@@ -4,7 +4,7 @@ Bleve Badger Backend
 
 Usage
 ==========
-> `➜ go get github.com/alash3al/bbadger` .
+> `➜ go get github.com/mosuka/bbadger` .
 
 ```go
 package main
@@ -12,7 +12,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/alash3al/bbadger"
+	"github.com/mosuka/bbadger"
 	"github.com/blevesearch/bleve"
 )
 
@@ -28,5 +28,4 @@ func main() {
     search := bleve.NewSearchRequest(query)
     searchResults, err := index.Search(search)
 }
-
 ```

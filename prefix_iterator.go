@@ -54,7 +54,7 @@ func (i *PrefixIterator) Valid() bool {
 // Close closes the current iterator and commit its transaction
 func (i *PrefixIterator) Close() error {
 	i.iterator.Close()
-	err := i.txn.Commit(nil)
+	err := i.txn.Commit()
 	if err != nil {
 		return err
 	}
